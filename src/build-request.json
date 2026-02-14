@@ -1,0 +1,261 @@
+{
+  "kind": "build_request",
+  "title": "EarScope Pro (Web) — Microcontroller-connected live ear imaging, capture workflow, patient/session management",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Implement an EarScope Pro web app shell with core navigation and routes for: Connection, Live Camera, Patients/Sessions, Gallery, and Export/Reports.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "user-1"
+        ],
+        "quotes": [
+          "Core Screens:\n\n1. **Connection Screen**: Bluetooth/WiFi/USB scanner → Connect → Handshake → Streaming\n\n2. **Live Camera View** (Full Screen):\n...\n4. **Medical Features**:\n   - Patient entry...\n   - Gallery...\n   - Export..."
+        ]
+      },
+      "acceptanceCriteria": [
+        "App has distinct pages/views for Connection, Live Camera, Patient/Session entry, Gallery, and Export.",
+        "All user-facing UI text is in English.",
+        "Navigation works without full page reloads."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Create a microcontroller communication layer in the frontend that can connect using browser-supported transports (WebSerial and/or WebUSB where available) and exchange newline-delimited JSON messages matching the provided command and telemetry schema. Include a clearly labeled “Demo/Simulator Mode” that generates realistic telemetry and frames when hardware APIs are unavailable.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "user-1"
+        ],
+        "quotes": [
+          "- Microcontroller Protocol: JSON over UART/TCP\n  Commands: START_STREAM, STOP_STREAM, CAPTURE_PHOTO, SET_BRIGHTNESS, SET_FOCUS\n  Telemetry: FPS, battery, connection status",
+          "**JSON Protocol Examples:**\n{\"cmd\": \"STREAM_START\", \"params\": {\"fps\":30, \"res\":\"720p\"}}\n{\"type\": \"VIDEO_FRAME\", \"data\": \"base64_mjpeg\", \"timestamp\":1644739382}\n{\"type\": \"PHOTO\", \"data\": \"base64_jpeg\", \"size\":2048000}"
+        ]
+      },
+      "acceptanceCriteria": [
+        "User can initiate a connection attempt from the Connection screen and see connection state transitions (Disconnected → Scanning/Connecting → Handshaking → Streaming).",
+        "Outbound messages use the specified command names and JSON structure (e.g., STREAM_START/STOP, CAPTURE_PHOTO, SET_BRIGHTNESS, SET_FOCUS).",
+        "Inbound telemetry (FPS, battery, connection status) is parsed and displayed in the UI.",
+        "When WebSerial/WebUSB is not available, Demo/Simulator Mode can be used to exercise the full app (streaming frames, capture photo, telemetry)."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Build the Connection Screen UI that supports scanning/selection and connect flow for hardware transports (as supported by the browser), performs a handshake step, and provides auto-reconnect behavior with user-visible status and manual retry.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "user-1"
+        ],
+        "quotes": [
+          "1. **Connection Screen**: Bluetooth/WiFi/USB scanner → Connect → Handshake → Streaming",
+          "- Auto-reconnect"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Connection screen shows available connection methods (as supported) and a Connect button.",
+        "Handshake status is shown explicitly (e.g., “Handshaking…” then “Ready”).",
+        "If the connection drops, the UI shows the disconnected state and the app attempts reconnect automatically (with a visible countdown or status).",
+        "User can cancel/retry connection."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Implement the Live Camera View full-screen UI with: live stream display (targeting 720p@30fps MJPEG frames where available), distance guide (“2–4 cm optimal”), zoom controls (1x/2x/4x/8x), LED controls (Auto/50%/100%/Off) wired to microcontroller commands, capture button, 3s timer capture, left/right ear toggle, patient ID display, session number display, and a gallery tray showing the last 5 photos.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "user-1"
+        ],
+        "quotes": [
+          "2. **Live Camera View** (Full Screen):\n   [LIVE 720p@30fps from 3.9mm camera]\n   📏 Distance Guide: 2-4cm optimal | 🔍 Zoom: 1x 2x 4x 8x | 💡 LED: Auto/50%/100%/OFF\n   [CAPTURE] [TIMER 3s] [SWITCH L/R] | Patient ID | Session #001 | Gallery Tray (last 5 photos)",
+          "**Technical Specs:**\n- 30fps MJPEG decoding (<100ms latency)"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Live view renders incoming MJPEG frames (base64 or binary depending on transport) and updates continuously while streaming.",
+        "Zoom control changes the displayed zoom level (client-side scaling is acceptable) and the current zoom level is visible.",
+        "LED control sends a corresponding command and the selected LED state is shown in the UI.",
+        "Capture triggers an immediate capture; Timer (3s) triggers capture after countdown.",
+        "L/R toggle changes the current ear side and is stored on captured images’ metadata.",
+        "Gallery tray shows the 5 most recent captures with thumbnails and timestamps."
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Implement the capture workflow: on CAPTURE, send the appropriate capture command to the microcontroller, receive a JPEG payload (base64), validate/parse it, auto-save it to the app’s data store with patient/session metadata, and generate a thumbnail for UI display.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "user-1"
+        ],
+        "quotes": [
+          "3. **Capture Workflow**: CAPTURE → Sends \"PHOTO\" command → Receives JPEG → Auto-save → Thumbnail",
+          "{\"type\": \"PHOTO\", \"data\": \"base64_jpeg\", \"size\":2048000}"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Capture sends a capture command over the active connection.",
+        "When a PHOTO message is received, the image is decoded and displayed immediately as the newest thumbnail.",
+        "Captured photos persist across refreshes (stored in the backend canister and reloaded on app start).",
+        "Each saved photo includes: timestamp, patient ID, session number, left/right ear side."
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Add backend data models and APIs (Motoko, single-actor) to manage: Patients (name, ID, age, doctor), Sessions (date/time, type: Routine/Follow-up/Emergency, left/right), and Captures (image bytes or base64, thumbnail, timestamp, session linkage, optional quality score, optional annotations/measurements).",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "user-1"
+        ],
+        "quotes": [
+          "- Patient entry: Name, ID, Age, Doctor, Date/Time\n- Session: Routine/Follow-up/Emergency | Left/Right ear toggle\n- Gallery: Timestamp, L/R, quality score, annotation tools, measurement scale"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend exposes query/update methods to create/list/update patients and sessions.",
+        "Backend exposes methods to save/list captures by session/patient and retrieve image data for display/export.",
+        "Data persists in canister stable storage across upgrades (using stable variables/structures appropriate for Motoko)."
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "text": "Implement Patient Entry and Session creation/editing UI, including session numbering (e.g., #001) and association of live capture operations to the currently active patient/session.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "user-1"
+        ],
+        "quotes": [
+          "- Patient entry: Name, ID, Age, Doctor, Date/Time\n- Session: Routine/Follow-up/Emergency | Left/Right ear toggle\n... | Patient ID | Session #001"
+        ]
+      },
+      "acceptanceCriteria": [
+        "User can create/select a patient and create/select a session.",
+        "Active patient and session are shown on the Live Camera View.",
+        "Session numbers increment per patient (or per app-defined rule) and are displayed with leading zeros (e.g., 001)."
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "text": "Add Batch Mode capture: a one-tap control that triggers 5 rapid captures at ~2 captures/second, with progress feedback and graceful handling if frames/photos arrive late or the connection drops.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "user-1"
+        ],
+        "quotes": [
+          "- Batch mode: 5 rapid shots (2/sec)"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Batch Mode starts and completes 5 captures without additional user input.",
+        "UI shows batch progress (e.g., 1/5 … 5/5).",
+        "If the connection drops mid-batch, the batch is canceled and the UI clearly reports the partial result."
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "text": "Build the Gallery screen for a session with: list/grid of captures, display of timestamp and L/R, editable quality score, basic annotation tools (freehand drawing + text label), and a measurement scale overlay that can be calibrated per session.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "user-1"
+        ],
+        "quotes": [
+          "- Gallery: Timestamp, L/R, quality score, annotation tools, measurement scale"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Gallery shows captures with timestamp and L/R label.",
+        "User can set/update a quality score per capture and it persists.",
+        "User can draw an annotation overlay and add at least one text label; annotations persist and re-render when reopening.",
+        "Measurement overlay supports setting a scale factor (calibration) and displays a ruler/scale on the image."
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "text": "Implement Export features: export a session as a ZIP containing all original images + a JSON metadata manifest, and generate a PDF report summarizing patient/session details and including selected images and annotations.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "user-1"
+        ],
+        "quotes": [
+          "- Export: ZIP batch or PDF report"
+        ]
+      },
+      "acceptanceCriteria": [
+        "User can export ZIP and download it locally.",
+        "ZIP contains images and a metadata file including timestamps, L/R, quality score, and annotation/measurement metadata.",
+        "User can generate a PDF report and download it locally.",
+        "PDF includes patient fields, session type/date/time, and embedded images (at least the first N or user-selected)."
+      ]
+    },
+    {
+      "id": "REQ-11",
+      "text": "Apply the requested medical UI style across the app: blue/white palette, large touch-friendly buttons, clear status indicators, and responsive layouts supporting portrait and landscape orientations.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "user-1"
+        ],
+        "quotes": [
+          "- Medical blue/white UI, large buttons, portrait/landscape"
+        ]
+      },
+      "acceptanceCriteria": [
+        "UI uses a consistent blue/white medical theme with high contrast and readable typography.",
+        "Primary actions (Connect, Start/Stop, Capture) are large and easy to tap/click.",
+        "Layouts adapt cleanly to wide (landscape) and narrow (portrait) viewports."
+      ]
+    },
+    {
+      "id": "REQ-12",
+      "text": "Add permissions and user guidance UX appropriate for a browser-based implementation: show clear instructions when WebSerial/WebUSB access is needed, provide fallback to Demo/Simulator Mode, and document required device/browser support on the Connection screen.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "user-1"
+        ],
+        "quotes": [
+          "- Permissions: Camera, Storage, Bluetooth/WiFi"
+        ]
+      },
+      "acceptanceCriteria": [
+        "If a required browser capability is missing or permission is denied, the app shows an actionable message explaining how to proceed.",
+        "Connection screen includes a short “Requirements” section (in English) describing supported browsers and the Demo/Simulator fallback."
+      ]
+    }
+  ],
+  "constraints": [
+    "Implement using the provided Internet Computer template stack only: Motoko (single-actor) backend + React/TypeScript + Tailwind + React Query frontend.",
+    "Do not edit any files under the immutable paths listed in SYSTEM_CONTEXT (compose UI from those components/hooks instead).",
+    "No native iOS/Android project generation (Flutter/React Native) can be included in this build; deliver a web app running in the browser.",
+    "No raw UART/TCP sockets from the backend canister; hardware communication must occur in the browser (e.g., WebSerial/WebUSB) or via Demo/Simulator Mode.",
+    "Do not introduce external databases (e.g., SQLite) or external cloud backup integrations (e.g., iCloud/Drive). Store app data in the canister and allow local file export/download."
+  ],
+  "nonGoals": [
+    "App Store / Play Store packaging and submission.",
+    "Guaranteed <100ms end-to-end latency across all devices and browsers (provide best-effort MJPEG rendering and instrumentation instead).",
+    "Bluetooth/WiFi scanning via native mobile APIs; implement only what is feasible in a web browser environment plus a simulator fallback.",
+    "H.264 decoding pipeline if not available from incoming data format (prioritize MJPEG/base64 frames as provided)."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
+  }
+}

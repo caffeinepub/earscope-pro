@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --radius: 0.5rem;
+        
+        /* Medical Blue/White Theme - Light Mode */
+        --background: 0.99 0 0;
+        --foreground: 0.2 0.05 220;
+        --card: 1 0 0;
+        --card-foreground: 0.2 0.05 220;
+        --popover: 1 0 0;
+        --popover-foreground: 0.2 0.05 220;
+        --primary: 0.55 0.15 220;
+        --primary-foreground: 0.99 0 0;
+        --secondary: 0.92 0.02 220;
+        --secondary-foreground: 0.2 0.05 220;
+        --muted: 0.95 0.01 220;
+        --muted-foreground: 0.5 0.03 220;
+        --accent: 0.88 0.03 220;
+        --accent-foreground: 0.2 0.05 220;
+        --destructive: 0.55 0.22 15;
+        --destructive-foreground: 0.99 0 0;
+        --border: 0.88 0.02 220;
+        --input: 0.88 0.02 220;
+        --ring: 0.55 0.15 220;
+        --chart-1: 0.6 0.15 220;
+        --chart-2: 0.65 0.12 200;
+        --chart-3: 0.7 0.1 180;
+        --chart-4: 0.55 0.18 240;
+        --chart-5: 0.5 0.2 260;
+    }
+
+    .dark {
+        /* Medical Blue/White Theme - Dark Mode */
+        --background: 0.15 0.02 220;
+        --foreground: 0.95 0.01 220;
+        --card: 0.2 0.03 220;
+        --card-foreground: 0.95 0.01 220;
+        --popover: 0.18 0.03 220;
+        --popover-foreground: 0.95 0.01 220;
+        --primary: 0.65 0.18 220;
+        --primary-foreground: 0.15 0.02 220;
+        --secondary: 0.25 0.04 220;
+        --secondary-foreground: 0.95 0.01 220;
+        --muted: 0.25 0.03 220;
+        --muted-foreground: 0.65 0.05 220;
+        --accent: 0.3 0.05 220;
+        --accent-foreground: 0.95 0.01 220;
+        --destructive: 0.6 0.25 15;
+        --destructive-foreground: 0.15 0.02 220;
+        --border: 0.3 0.04 220;
+        --input: 0.3 0.04 220;
+        --ring: 0.65 0.18 220;
+        --chart-1: 0.6 0.15 220;
+        --chart-2: 0.65 0.12 200;
+        --chart-3: 0.7 0.1 180;
+        --chart-4: 0.55 0.18 240;
+        --chart-5: 0.5 0.2 260;
+    }
+
+    * {
+        @apply border-border;
+    }
+    
+    body {
+        @apply bg-background text-foreground;
+        font-feature-settings: "rlig" 1, "calt" 1;
+    }
+}
+
+@layer components {
+    /* Large touch-friendly buttons for medical use */
+    .btn-medical {
+        @apply min-h-[3rem] min-w-[8rem] text-lg font-semibold;
+    }
+}

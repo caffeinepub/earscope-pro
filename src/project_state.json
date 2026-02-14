@@ -1,0 +1,183 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "Build \"EarScope Pro\": a cross-platform (iOS/Android) medical ear imaging app that connects to an external 3.9mm endoscope camera via a custom microcontroller, providing synchronized live 720p@30fps streaming, photo capture, patient/session management, gallery/annotation, and export with deploy-ready native code (Flutter or React Native).",
+  "architectural_notes": [
+    "Target cross-platform implementation using Flutter or React Native; deliver deploy-ready iOS/Android builds.",
+    "Hardware interface: JSON protocol over UART/TCP to microcontroller; supports streaming commands and telemetry.",
+    "Video pipeline must handle MJPEG/H.264 720p@30fps with <100ms latency target and tight synchronization between app/microcontroller/camera.",
+    "Local persistence via SQLite; cloud/drive backup via iCloud/Drive integrations."
+  ],
+  "known_issues": [],
+  "isFixRequest": false,
+  "existing_features": [
+    {
+      "id": "feature-implement-an-earscope-pro-web-app-shell-with-core-navigation-and-routes-for-connection-live-camera-patients-sessions-gallery-and-export-reports",
+      "title": "Implement an EarScope Pro web app shell with core navigation and routes for: Connection, Live Camera, Patients/Sessions, Gallery, and Export/Reports.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-microcontroller-communication-layer-in-the-frontend-that-can-connect-using-browser-supported-transports-webserial-and-or-webusb-where-available-and-exchange-newline-delimited-json-messages-matching-the-provided-command-and-telemetry-schema-include-a-clearly-labeled-demo-simulator-mode-that-generates-realistic-telemetry-and-frames-when-hardware-apis-are-unavailable",
+      "title": "Create a microcontroller communication layer in the frontend that can connect using browser-supported transports (WebSerial and/or WebUSB where available) and exchange newline-delimited JSON messages matching the provided command and telemetry schema. Include a clearly labeled “Demo/Simulator Mode” that generates realistic telemetry and frames when hardware APIs are unavailable.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-the-connection-screen-ui-that-supports-scanning-selection-and-connect-flow-for-hardware-transports-as-supported-by-the-browser-performs-a-handshake-step-and-provides-auto-reconnect-behavior-with-user-visible-status-and-manual-retry",
+      "title": "Build the Connection Screen UI that supports scanning/selection and connect flow for hardware transports (as supported by the browser), performs a handshake step, and provides auto-reconnect behavior with user-visible status and manual retry.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-the-live-camera-view-full-screen-ui-with-live-stream-display-targeting-720p-30fps-mjpeg-frames-where-available-distance-guide-2-4-cm-optimal-zoom-controls-1x-2x-4x-8x-led-controls-auto-50-100-off-wired-to-microcontroller-commands-capture-button-3s-timer-capture-left-right-ear-toggle-patient-id-display-session-number-display-and-a-gallery-tray-showing-the-last-5-photos",
+      "title": "Implement the Live Camera View full-screen UI with: live stream display (targeting 720p@30fps MJPEG frames where available), distance guide (“2–4 cm optimal”), zoom controls (1x/2x/4x/8x), LED controls (Auto/50%/100%/Off) wired to microcontroller commands, capture button, 3s timer capture, left/right ear toggle, patient ID display, session number display, and a gallery tray showing the last 5 photos.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-the-capture-workflow-on-capture-send-the-appropriate-capture-command-to-the-microcontroller-receive-a-jpeg-payload-base64-validate-parse-it-auto-save-it-to-the-app-s-data-store-with-patient-session-metadata-and-generate-a-thumbnail-for-ui-display",
+      "title": "Implement the capture workflow: on CAPTURE, send the appropriate capture command to the microcontroller, receive a JPEG payload (base64), validate/parse it, auto-save it to the app’s data store with patient/session metadata, and generate a thumbnail for UI display.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-patient-entry-and-session-creation-editing-ui-including-session-numbering-e-g-001-and-association-of-live-capture-operations-to-the-currently-active-patient-session",
+      "title": "Implement Patient Entry and Session creation/editing UI, including session numbering (e.g., #001) and association of live capture operations to the currently active patient/session.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-batch-mode-capture-a-one-tap-control-that-triggers-5-rapid-captures-at-2-captures-second-with-progress-feedback-and-graceful-handling-if-frames-photos-arrive-late-or-the-connection-drops",
+      "title": "Add Batch Mode capture: a one-tap control that triggers 5 rapid captures at ~2 captures/second, with progress feedback and graceful handling if frames/photos arrive late or the connection drops.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-the-gallery-screen-for-a-session-with-list-grid-of-captures-display-of-timestamp-and-l-r-editable-quality-score-basic-annotation-tools-freehand-drawing-text-label-and-a-measurement-scale-overlay-that-can-be-calibrated-per-session",
+      "title": "Build the Gallery screen for a session with: list/grid of captures, display of timestamp and L/R, editable quality score, basic annotation tools (freehand drawing + text label), and a measurement scale overlay that can be calibrated per session.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-export-features-export-a-session-as-a-zip-containing-all-original-images-a-json-metadata-manifest-and-generate-a-pdf-report-summarizing-patient-session-details-and-including-selected-images-and-annotations",
+      "title": "Implement Export features: export a session as a ZIP containing all original images + a JSON metadata manifest, and generate a PDF report summarizing patient/session details and including selected images and annotations.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-apply-the-requested-medical-ui-style-across-the-app-blue-white-palette-large-touch-friendly-buttons-clear-status-indicators-and-responsive-layouts-supporting-portrait-and-landscape-orientations",
+      "title": "Apply the requested medical UI style across the app: blue/white palette, large touch-friendly buttons, clear status indicators, and responsive layouts supporting portrait and landscape orientations.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-permissions-and-user-guidance-ux-appropriate-for-a-browser-based-implementation-show-clear-instructions-when-webserial-webusb-access-is-needed-provide-fallback-to-demo-simulator-mode-and-document-required-device-browser-support-on-the-connection-screen",
+      "title": "Add permissions and user guidance UX appropriate for a browser-based implementation: show clear instructions when WebSerial/WebUSB access is needed, provide fallback to Demo/Simulator Mode, and document required device/browser support on the Connection screen.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Cross-platform mobile app (iOS/Android) for EarScope Pro (Flutter or React Native), App Store/Play Store ready",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Hardware connection & handshake screen supporting Bluetooth/WiFi/USB scanning, connect flow, and auto-reconnect",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Microcontroller communications layer using JSON over UART/TCP with commands (START/STOP_STREAM, CAPTURE_PHOTO, SET_BRIGHTNESS, SET_FOCUS) and telemetry (FPS, battery, connection status)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Low-latency live video streaming (MJPEG/H.264 720p@30fps) with <100ms latency target and synchronized device control",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Live Camera View UI: distance guide, zoom 1x/2x/4x/8x, LED control (Auto/50%/100%/OFF), capture, 3s timer, L/R switch, patient/session display, gallery tray (last 5)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Photo capture workflow: send PHOTO/CAPTURE command, receive JPEG, auto-save, generate thumbnail",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Patient and session management: patient entry fields, session types (Routine/Follow-up/Emergency), left/right ear toggle, session numbering",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Batch capture mode: 5 rapid shots at 2 per second",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "Gallery features: timestamp, L/R, quality score, annotation tools, measurement scale",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "Export and backup: export ZIP batch or PDF report; SQLite storage; iCloud/Drive backup",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "App UX/system requirements: medical blue/white UI, large buttons, portrait/landscape support, permissions (Camera, Storage, Bluetooth/WiFi)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-17",
+      "summary": "Add backend data models and APIs (Motoko, single-actor) to manage: Patients (name, ID, age, doctor), Sessions (date/time, type: Routine/Follow-up/Emergency, left/right), and Captures (image bytes or base64, thumbnail, timestamp, session linkage, optional quality score, optional annotations/measurements).",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "EarScope Pro",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

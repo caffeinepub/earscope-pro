@@ -1,0 +1,168 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-13T04:12:20.189Z",
+  "summary": "Diff adds a new React/TanStack Router app shell with pages for Connection/Live/Patients/Gallery/Export, UI components for connection status, live stream viewer and controls, capture workflow helpers (including batch capture), export panel stubs, and a Motoko backend with patient/session/capture types plus authorization/storage mixins. Several key requested behaviors (stable persistence, full capture persistence, gallery annotation/measurement tools, and concrete export contents/PDF download) are not evidenced in the shown diff summary, while some unrequested features (login/user profiles/authorization) are introduced.",
+  "missing_requirements": [
+    {
+      "id": "REQ-2",
+      "requirement": "Microcontroller communication layer uses newline-delimited JSON with specified command/telemetry schema (STREAM_START/STOP, CAPTURE_PHOTO, SET_BRIGHTNESS, SET_FOCUS), parses inbound telemetry (FPS, battery, connection status) and displays it.",
+      "reason": "The diff shows transports being referenced and a connection-state badge/panel, plus a capturePhoto hook via MicrocontrollerClient, but does not include evidence of newline-delimited JSON protocol implementation, specific command names, or telemetry parsing/display (FPS/battery).",
+      "evidence": [
+        "frontend/src/components/TransportPicker.tsx",
+        "frontend/src/components/AppShell.tsx",
+        "frontend/src/components/ConnectionStatusPanel.tsx",
+        "frontend/src/captures/captureWorkflow.ts"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Connection screen supports scanning/selection and connect flow, explicit handshake step, auto-reconnect with visible countdown/status, and user cancel/retry.",
+      "reason": "There are UI components for status and picking a transport, and a generic retry guidance component, but the diff summary does not show the actual ConnectionPage logic implementing scanning, handshake flow, auto-reconnect countdown, or cancel behavior.",
+      "evidence": [
+        "frontend/src/components/TransportPicker.tsx",
+        "frontend/src/components/ConnectionStatusPanel.tsx",
+        "frontend/src/components/PermissionGuidance.tsx",
+        "frontend/src/App.tsx"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "requirement": "Live Camera View shows patient ID and session number; gallery tray shows last 5 photos with thumbnails and timestamps; LED control wired to microcontroller commands.",
+      "reason": "Live UI components cover zoom/LED selector/capture/timer and a recent captures tray, but the tray UI shown only displays L/R badge (no timestamp). Also, patient ID/session number display and actual wiring of LED changes to microcontroller commands are not evidenced in the provided snippets (page-level logic not shown).",
+      "evidence": [
+        "frontend/src/components/LiveControlsBar.tsx",
+        "frontend/src/components/LastCapturesTray.tsx",
+        "frontend/src/components/LiveStreamViewer.tsx"
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "requirement": "Capture workflow persists captures across refresh by saving to backend canister and reloading on app start; each saved photo includes timestamp, patient ID, session number, and L/R ear side.",
+      "reason": "CaptureWorkflow generates metadata and thumbnails and provides a saveCapture helper that depends on an injected addCaptureFn, but the diff summary does not show any actual call to backend to persist captures, any reload-on-start behavior, or inclusion of session numbering in saved metadata (sessionId is stored, but “session number” is not evidenced).",
+      "evidence": [
+        "frontend/src/captures/captureWorkflow.ts"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "requirement": "Backend exposes APIs to create/list/update patients and sessions; save/list captures by session/patient and retrieve image data; captures include optional annotations/measurements; data persists in stable storage across upgrades.",
+      "reason": "backend/main.mo shows patient/session/capture types and some add/get/list for patients, but the file is truncated and does not evidence stable variables for persistence across upgrades, update APIs, capture listing/retrieval APIs, nor fields for annotations/measurements in the Capture type.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "requirement": "Session numbering increments and is displayed with leading zeros; active patient/session associated with live capture operations and shown on Live Camera View.",
+      "reason": "Session selector displays a padded index (e.g., 001) in UI, but session IDs are random strings and there is no evidence that numbering is persisted/defined as the session number rule. Also, linkage of the active patient/session into Live Camera and into capture saves is not shown in the provided snippets.",
+      "evidence": [
+        "frontend/src/components/SessionForm.tsx",
+        "frontend/src/App.tsx",
+        "frontend/src/captures/captureWorkflow.ts"
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "requirement": "Batch Mode capture shows progress as 1/5..5/5 and cancels gracefully on connection drop with clear partial-result reporting.",
+      "reason": "BatchCaptureController triggers repeated captures and calls an onProgress callback, but the provided BatchCaptureButton only displays a progress bar that jumps to 100% on completion (no 1/5 UI). No evidence of connection-drop detection/cancel or partial-result reporting is shown.",
+      "evidence": [
+        "frontend/src/captures/batchCapture.ts",
+        "frontend/src/components/BatchCaptureButton.tsx"
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "requirement": "Gallery supports timestamp and L/R labels, editable quality score persisted, freehand + text annotations persisted, and a calibrated measurement scale overlay per session.",
+      "reason": "CaptureGrid renders thumbnails and a timestamp but does not show L/R labeling, quality score editing, annotation tools, measurement overlay, or persistence of these fields.",
+      "evidence": [
+        "frontend/src/components/CaptureGrid.tsx"
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "requirement": "Export session as a ZIP containing all original images plus a JSON manifest with timestamps, L/R, quality score, annotations/measurement metadata; generate and download a PDF report including patient/session details and embedded images/annotations.",
+      "reason": "ExportPanel calls exportSessionAsZip and generatePDFReport, but the implementations are not shown. The PDF UX explicitly says it opens a printable report and uses browser Print to save as PDF, which does not meet the stated 'generate a PDF report and download it locally' acceptance criterion. ZIP contents/manifest requirements and inclusion of annotations/measurement metadata are not evidenced.",
+      "evidence": [
+        "frontend/src/components/ExportPanel.tsx"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Internet Identity login/logout UI and associated authentication state handling.",
+      "reason": "BuildRequest does not ask for authentication; it focuses on device connection, imaging workflow, and patient/session management.",
+      "evidence": [
+        "frontend/src/components/LoginButton.tsx",
+        "frontend/src/components/AppShell.tsx"
+      ]
+    },
+    {
+      "description": "Backend authorization/access control and user profile management (permissions checks, admin/user roles, userProfiles map).",
+      "reason": "BuildRequest does not request multi-user authorization or user profile features; adding them is beyond specified requirements.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "description": "Footer attribution/link to caffeine.ai.",
+      "reason": "Not requested as part of the app requirements; adds extra UI content unrelated to specified features.",
+      "evidence": [
+        "frontend/src/components/AppShell.tsx"
+      ]
+    }
+  ],
+  "confidence": 0.62,
+  "changed_files": [
+    "all_files_summary.json",
+    "backend/main.mo",
+    "frontend-file-summaries.txt",
+    "frontend/index.css",
+    "frontend/index.html",
+    "frontend/src/App.tsx",
+    "frontend/src/captures/batchCapture.ts",
+    "frontend/src/captures/captureWorkflow.ts",
+    "frontend/src/captures/thumbnail.ts",
+    "frontend/src/components/AppShell.tsx",
+    "frontend/src/components/BatchCaptureButton.tsx",
+    "frontend/src/components/CaptureGrid.tsx",
+    "frontend/src/components/ConnectionStatusPanel.tsx",
+    "frontend/src/components/DistanceGuide.tsx",
+    "frontend/src/components/ExportPanel.tsx",
+    "frontend/src/components/LastCapturesTray.tsx",
+    "frontend/src/components/LiveControlsBar.tsx",
+    "frontend/src/components/LiveStreamViewer.tsx",
+    "frontend/src/components/LoginButton.tsx",
+    "frontend/src/components/PatientForm.tsx",
+    "frontend/src/components/PermissionGuidance.tsx",
+    "frontend/src/components/RequirementsHelp.tsx",
+    "frontend/src/components/SessionForm.tsx",
+    "frontend/src/components/TransportPicker.tsx",
+    "frontend/src/export/manifest.ts",
+    "frontend/src/export/pdfReport.ts",
+    "frontend/src/export/zipExport.ts",
+    "frontend/src/gallery/annotationModel.ts",
+    "frontend/src/gallery/localPersistence.ts",
+    "frontend/src/hooks/useActor.ts",
+    "frontend/src/hooks/useInternetIdentity.ts",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/index.css",
+    "frontend/src/main.tsx",
+    "frontend/src/mcu/MicrocontrollerClient.ts",
+    "frontend/src/mcu/autoReconnect.ts",
+    "frontend/src/mcu/protocol.ts",
+    "frontend/src/mcu/simulator/demoSimulator.ts",
+    "frontend/src/mcu/transports/webSerialTransport.ts",
+    "frontend/src/mcu/transports/webUsbTransport.ts",
+    "frontend/src/pages/ConnectionPage.tsx",
+    "frontend/src/pages/ExportReportsPage.tsx",
+    "frontend/src/pages/GalleryPage.tsx",
+    "frontend/src/pages/LiveCameraPage.tsx",
+    "frontend/src/pages/PatientsSessionsPage.tsx",
+    "frontend/src/state/activeSessionStore.tsx",
+    "frontend/src/state/mcuStore.tsx",
+    "frontend/src/utils/urlParams.ts",
+    "frontend/tailwind.config.js",
+    "project_state.json"
+  ]
+}

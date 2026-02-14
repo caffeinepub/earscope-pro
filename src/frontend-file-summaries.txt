@@ -1,0 +1,11 @@
+{
+  "frontend/package.json": "Updated package.json to include jszip and jspdf dependencies required for export functionality.",
+  "frontend/src/mcu/transports/webSerialTransport.ts": "WebSerial transport implementation for microcontroller communication using browser Serial API with proper type handling for text streams.",
+  "frontend/src/mcu/transports/webUsbTransport.ts": "WebUSB transport implementation for microcontroller communication using browser USB API with proper type handling.",
+  "frontend/src/captures/captureWorkflow.ts": "Capture workflow orchestrator that handles photo capture commands, thumbnail generation, and metadata packaging with proper handler type support.",
+  "frontend/src/captures/batchCapture.ts": "Batch capture controller that manages multiple rapid captures with progress tracking and error handling.",
+  "frontend/src/mcu/MicrocontrollerClient.ts": "Main microcontroller client that manages transport selection, command sending, and message handling with proper optional handler types.",
+  "frontend/src/export/zipExport.ts": "Browser-native export functionality that downloads session manifest as JSON and individual image files without external ZIP library dependencies.",
+  "frontend/src/export/pdfReport.ts": "Browser-native report generator that creates an HTML report with patient info and images, openable in a new window for printing to PDF via browser's native print dialog.",
+  "frontend/src/components/ExportPanel.tsx": "Export panel component providing UI controls for downloading session files and generating printable reports with appropriate user feedback."
+}

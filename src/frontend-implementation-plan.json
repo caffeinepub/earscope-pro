@@ -1,0 +1,435 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "EarScope Pro (Web) — Frontend implementation plan",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "summary": "Create the app shell with client-side routing and navigation for Connection, Live Camera, Patients/Sessions, Gallery, and Export/Reports.",
+      "acceptanceCriteria": [
+        "App has distinct pages/views for Connection, Live Camera, Patient/Session entry, Gallery, and Export.",
+        "All user-facing UI text is in English.",
+        "Navigation works without full page reloads."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "create",
+          "description": "Create the top-level App component with client-side routing (no full page reloads) and core layout (header + navigation) for Connection, Live Camera, Patients/Sessions, Gallery, and Export/Reports. Use the shadcn-ui component library (e.g., buttons/navigation primitives) to provide consistent, touch-friendly controls. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/AppShell.tsx",
+          "operation": "create",
+          "description": "Create a reusable application shell (layout, header, nav, content area) and wire it to render the required route views. Use shadcn-ui components for consistent layout and navigation controls. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/ConnectionPage.tsx",
+          "operation": "create",
+          "description": "Create the Connection page view and ensure it is routable from AppShell navigation."
+        },
+        {
+          "path": "frontend/src/pages/LiveCameraPage.tsx",
+          "operation": "create",
+          "description": "Create the Live Camera full-screen page view and ensure it is routable from AppShell navigation."
+        },
+        {
+          "path": "frontend/src/pages/PatientsSessionsPage.tsx",
+          "operation": "create",
+          "description": "Create the Patients/Sessions page view and ensure it is routable from AppShell navigation."
+        },
+        {
+          "path": "frontend/src/pages/GalleryPage.tsx",
+          "operation": "create",
+          "description": "Create the Gallery page view (session-scoped) and ensure it is routable from AppShell navigation."
+        },
+        {
+          "path": "frontend/src/pages/ExportReportsPage.tsx",
+          "operation": "create",
+          "description": "Create the Export/Reports page view and ensure it is routable from AppShell navigation."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Implement a frontend microcontroller communication layer using WebSerial/WebUSB (when available) with newline-delimited JSON messaging plus a Demo/Simulator Mode.",
+      "acceptanceCriteria": [
+        "User can initiate a connection attempt from the Connection screen and see connection state transitions (Disconnected → Scanning/Connecting → Handshaking → Streaming).",
+        "Outbound messages use the specified command names and JSON structure (e.g., STREAM_START/STOP, CAPTURE_PHOTO, SET_BRIGHTNESS, SET_FOCUS).",
+        "Inbound telemetry (FPS, battery, connection status) is parsed and displayed in the UI.",
+        "When WebSerial/WebUSB is not available, Demo/Simulator Mode can be used to exercise the full app (streaming frames, capture photo, telemetry)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/mcu/protocol.ts",
+          "operation": "create",
+          "description": "Define TypeScript types/helpers for the newline-delimited JSON protocol (commands: STREAM_START/STREAM_STOP/CAPTURE_PHOTO/SET_BRIGHTNESS/SET_FOCUS; inbound types like VIDEO_FRAME/PHOTO and telemetry fields such as FPS/battery/connection status), including encoding/decoding utilities."
+        },
+        {
+          "path": "frontend/src/mcu/transports/webSerialTransport.ts",
+          "operation": "create",
+          "description": "Implement a WebSerial-based transport wrapper (feature-detected) that reads/writes newline-delimited JSON messages and surfaces connection/stream state changes to the app."
+        },
+        {
+          "path": "frontend/src/mcu/transports/webUsbTransport.ts",
+          "operation": "create",
+          "description": "Implement a WebUSB-based transport wrapper (feature-detected) that reads/writes newline-delimited JSON messages and surfaces connection/stream state changes to the app."
+        },
+        {
+          "path": "frontend/src/mcu/simulator/demoSimulator.ts",
+          "operation": "create",
+          "description": "Implement Demo/Simulator Mode that generates realistic telemetry and video frames, emits PHOTO payloads for capture requests, and mirrors the same state transitions as hardware transports."
+        },
+        {
+          "path": "frontend/src/mcu/MicrocontrollerClient.ts",
+          "operation": "create",
+          "description": "Create a microcontroller client/state machine that selects an available transport (WebSerial/WebUSB) or Demo/Simulator Mode, performs message exchange, and exposes a unified interface to the UI (connect/disconnect/start/stop/capture/set brightness/set focus + current telemetry + latest frames/photos)."
+        },
+        {
+          "path": "frontend/src/state/mcuStore.tsx",
+          "operation": "create",
+          "description": "Create a React context/store to share microcontroller connection state, telemetry, and streaming frame buffers across pages (Connection + Live Camera) without prop drilling."
+        },
+        {
+          "path": "frontend/src/pages/ConnectionPage.tsx",
+          "operation": "modify",
+          "description": "Wire Connection UI controls to the MicrocontrollerClient (connect/disconnect, demo mode toggle) and display parsed telemetry and connection status transitions as user-readable labels."
+        },
+        {
+          "path": "frontend/src/pages/LiveCameraPage.tsx",
+          "operation": "modify",
+          "description": "Consume the shared MCU store to render incoming frames and show telemetry (FPS/battery/status), including simulator parity."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Build the Connection Screen UI with transport selection, handshake step, auto-reconnect, and manual cancel/retry.",
+      "acceptanceCriteria": [
+        "Connection screen shows available connection methods (as supported) and a Connect button.",
+        "Handshake status is shown explicitly (e.g., “Handshaking…” then “Ready”).",
+        "If the connection drops, the UI shows the disconnected state and the app attempts reconnect automatically (with a visible countdown or status).",
+        "User can cancel/retry connection."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/ConnectionStatusPanel.tsx",
+          "operation": "create",
+          "description": "Create a status panel component that renders connection state (Disconnected/Scanning/Connecting/Handshaking/Ready/Streaming), last error, and auto-reconnect countdown. Use shadcn-ui components for status badges/buttons. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/TransportPicker.tsx",
+          "operation": "create",
+          "description": "Create a transport picker that lists supported browser transports (WebSerial/WebUSB when available) and a clearly labeled Demo/Simulator Mode option. Use shadcn-ui form controls for consistent UX. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/mcu/autoReconnect.ts",
+          "operation": "create",
+          "description": "Implement auto-reconnect behavior (retry strategy + visible countdown/status) that can be invoked by ConnectionPage and shared MCU store when a transport disconnects unexpectedly."
+        },
+        {
+          "path": "frontend/src/pages/ConnectionPage.tsx",
+          "operation": "modify",
+          "description": "Implement the full connection flow UI: transport selection, connect, explicit handshake status, cancel/retry actions, and auto-reconnect status display (including requirements/help copy)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Implement the full-screen Live Camera View UI with MJPEG frame rendering, guides/controls, capture/timer, ear toggle, patient/session display, and last-5 gallery tray.",
+      "acceptanceCriteria": [
+        "Live view renders incoming MJPEG frames (base64 or binary depending on transport) and updates continuously while streaming.",
+        "Zoom control changes the displayed zoom level (client-side scaling is acceptable) and the current zoom level is visible.",
+        "LED control sends a corresponding command and the selected LED state is shown in the UI.",
+        "Capture triggers an immediate capture; Timer (3s) triggers capture after countdown.",
+        "L/R toggle changes the current ear side and is stored on captured images’ metadata.",
+        "Gallery tray shows the 5 most recent captures with thumbnails and timestamps."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/LiveStreamViewer.tsx",
+          "operation": "create",
+          "description": "Create a live stream viewer component that renders incoming MJPEG frames from the MCU store (e.g., updating an <img> or canvas) and supports client-side zoom scaling with a visible current zoom level."
+        },
+        {
+          "path": "frontend/src/components/LiveControlsBar.tsx",
+          "operation": "create",
+          "description": "Create the main control bar: Zoom (1x/2x/4x/8x), LED controls (Auto/50%/100%/Off), Capture, Timer 3s, and Switch L/R. Use shadcn-ui buttons/toggles to provide large touch-friendly controls. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/DistanceGuide.tsx",
+          "operation": "create",
+          "description": "Create the distance guide UI (“2–4 cm optimal”) as an always-visible overlay in Live Camera."
+        },
+        {
+          "path": "frontend/src/components/LastCapturesTray.tsx",
+          "operation": "create",
+          "description": "Create a gallery tray component showing the last 5 captures with thumbnail + timestamp + L/R label, clickable to open in Gallery page."
+        },
+        {
+          "path": "frontend/src/state/activeSessionStore.tsx",
+          "operation": "create",
+          "description": "Create a small global store/context for active patient ID, session ID, session number display, and current ear side selection so Live Camera can display and tag captures consistently."
+        },
+        {
+          "path": "frontend/src/pages/LiveCameraPage.tsx",
+          "operation": "modify",
+          "description": "Assemble the full-screen Live Camera View using LiveStreamViewer, DistanceGuide, LiveControlsBar, active patient/session display, and LastCapturesTray; wire UI actions to MicrocontrollerClient commands (including LED and capture/timer)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Implement capture workflow in the frontend: send capture command, parse PHOTO payload, generate thumbnail, and persist captures via the canister data store.",
+      "acceptanceCriteria": [
+        "Capture sends a capture command over the active connection.",
+        "When a PHOTO message is received, the image is decoded and displayed immediately as the newest thumbnail.",
+        "Captured photos persist across refreshes (stored in the backend canister and reloaded on app start).",
+        "Each saved photo includes: timestamp, patient ID, session number, left/right ear side."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/captures/thumbnail.ts",
+          "operation": "create",
+          "description": "Implement JPEG/base64 validation/decoding helpers and thumbnail generation (e.g., canvas resize + JPEG output) for immediate UI display."
+        },
+        {
+          "path": "frontend/src/captures/captureWorkflow.ts",
+          "operation": "create",
+          "description": "Implement the end-to-end capture workflow: issue CAPTURE_PHOTO command via MicrocontrollerClient, await PHOTO message, validate/parse image, generate thumbnail, and package patient/session metadata (timestamp, patient ID, session number, ear side) for persistence and UI updates."
+        },
+        {
+          "path": "frontend/src/hooks/useCaptures.ts",
+          "operation": "create",
+          "description": "Create React Query hooks to load captures from the canister and save new captures. Use the blob-storage ExternalBlob client class for image/thumbnail bytes and direct URL display where appropriate. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/LiveCameraPage.tsx",
+          "operation": "modify",
+          "description": "Integrate captureWorkflow into Capture and Timer 3s actions; update LastCapturesTray immediately on PHOTO receipt and ensure saved captures are reloaded on app start via React Query."
+        },
+        {
+          "path": "frontend/src/pages/GalleryPage.tsx",
+          "operation": "modify",
+          "description": "Load and display captures for the currently selected session (including persisted captures across refresh) using the shared capture hooks and blob-storage direct URLs. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "summary": "Build Patient Entry and Session creation/editing UI with session numbering and active patient/session association to Live Capture.",
+      "acceptanceCriteria": [
+        "User can create/select a patient and create/select a session.",
+        "Active patient and session are shown on the Live Camera View.",
+        "Session numbers increment per patient (or per app-defined rule) and are displayed with leading zeros (e.g., 001)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/usePatients.ts",
+          "operation": "create",
+          "description": "Create React Query hooks for listing/creating/selecting patients via the canister actor, and exposing a cached patient list for UI."
+        },
+        {
+          "path": "frontend/src/hooks/useSessions.ts",
+          "operation": "create",
+          "description": "Create React Query hooks for listing/creating/selecting sessions via the canister actor, including deriving the next session number display (e.g., 001) per patient (frontend-derived rule)."
+        },
+        {
+          "path": "frontend/src/components/PatientForm.tsx",
+          "operation": "create",
+          "description": "Create a patient entry form (name, ID, age, doctor) and patient selector. Use shadcn-ui form components to keep consistent medical UI and large touch targets. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/SessionForm.tsx",
+          "operation": "create",
+          "description": "Create a session creation/editor UI (date/time display, type: Routine/Follow-up/Emergency, left/right) and session selector. Use shadcn-ui form components. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/PatientsSessionsPage.tsx",
+          "operation": "modify",
+          "description": "Assemble patient and session management screen using PatientForm and SessionForm; on selection, set the active patient/session in activeSessionStore for use by Live Camera and Capture workflow."
+        },
+        {
+          "path": "frontend/src/pages/LiveCameraPage.tsx",
+          "operation": "modify",
+          "description": "Display active patient ID and session number (leading zeros) on Live Camera View and ensure captures are associated to the active session/patient from the activeSessionStore."
+        }
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "summary": "Add Batch Mode capture: one-tap to trigger 5 rapid captures with progress and graceful cancellation on disconnect/late arrivals.",
+      "acceptanceCriteria": [
+        "Batch Mode starts and completes 5 captures without additional user input.",
+        "UI shows batch progress (e.g., 1/5 … 5/5).",
+        "If the connection drops mid-batch, the batch is canceled and the UI clearly reports the partial result."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/captures/batchCapture.ts",
+          "operation": "create",
+          "description": "Implement batch capture controller that schedules 5 captures at ~2 captures/second, tracks progress, times out/handles late PHOTO arrivals, and cancels cleanly on disconnect."
+        },
+        {
+          "path": "frontend/src/components/BatchCaptureButton.tsx",
+          "operation": "create",
+          "description": "Create a one-tap Batch Mode control with progress feedback (e.g., 1/5…5/5) and cancel state. Use shadcn-ui button/progress primitives for touch-friendly UX. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/LiveCameraPage.tsx",
+          "operation": "modify",
+          "description": "Wire BatchCaptureButton into Live Camera View; integrate with MicrocontrollerClient + captureWorkflow so batch results are saved and shown in the last-5 tray; cancel and report partial results when connection drops."
+        }
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "summary": "Build the session Gallery with capture grid, quality scoring, annotations (freehand + text), and a calibrated measurement scale overlay.",
+      "acceptanceCriteria": [
+        "Gallery shows captures with timestamp and L/R label.",
+        "User can set/update a quality score per capture and it persists.",
+        "User can draw an annotation overlay and add at least one text label; annotations persist and re-render when reopening.",
+        "Measurement overlay supports setting a scale factor (calibration) and displays a ruler/scale on the image."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/gallery/annotationModel.ts",
+          "operation": "create",
+          "description": "Define a frontend annotation/measurement data model for freehand strokes, text labels, and per-session calibration metadata to support persistence and re-rendering."
+        },
+        {
+          "path": "frontend/src/gallery/localPersistence.ts",
+          "operation": "create",
+          "description": "Implement local persistence (e.g., localStorage/IndexedDB) for per-capture quality score, annotations, and per-session calibration so they persist across refreshes and can be reloaded when reopening the Gallery."
+        },
+        {
+          "path": "frontend/src/components/CaptureGrid.tsx",
+          "operation": "create",
+          "description": "Create a grid/list component for session captures showing thumbnail, timestamp, and L/R label; allow selecting a capture for detailed view."
+        },
+        {
+          "path": "frontend/src/components/CaptureDetailEditor.tsx",
+          "operation": "create",
+          "description": "Create a capture detail view that supports editing quality score and managing annotations/measurement overlays for the selected capture. Use shadcn-ui inputs/sliders/dialogs as appropriate. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/AnnotationCanvas.tsx",
+          "operation": "create",
+          "description": "Create a canvas overlay component to support freehand drawing and placing at least one text label; ensure it can load/save via the annotation model and local persistence."
+        },
+        {
+          "path": "frontend/src/components/MeasurementOverlay.tsx",
+          "operation": "create",
+          "description": "Create a measurement scale overlay with per-session calibration (scale factor input) and a visible ruler/scale drawn over the image."
+        },
+        {
+          "path": "frontend/src/pages/GalleryPage.tsx",
+          "operation": "modify",
+          "description": "Assemble Gallery page for the active/selected session: show CaptureGrid, and on selection show CaptureDetailEditor with AnnotationCanvas + MeasurementOverlay; load/save quality score, annotations, and calibration via localPersistence."
+        }
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "summary": "Implement Export: ZIP session export (images + JSON manifest) and PDF report generation with patient/session details and selected images/annotations.",
+      "acceptanceCriteria": [
+        "User can export ZIP and download it locally.",
+        "ZIP contains images and a metadata file including timestamps, L/R, quality score, and annotation/measurement metadata.",
+        "User can generate a PDF report and download it locally.",
+        "PDF includes patient fields, session type/date/time, and embedded images (at least the first N or user-selected)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/package.json",
+          "operation": "modify",
+          "description": "Add/adjust frontend dependencies needed for client-side ZIP and PDF generation (e.g., a ZIP library and a PDF generation library) to support local downloads without backend involvement."
+        },
+        {
+          "path": "frontend/src/export/manifest.ts",
+          "operation": "create",
+          "description": "Implement metadata manifest generation for a session export including capture timestamps, L/R, quality score, and annotation/measurement metadata."
+        },
+        {
+          "path": "frontend/src/export/zipExport.ts",
+          "operation": "create",
+          "description": "Implement ZIP export builder that bundles original images plus the JSON metadata manifest and triggers a local file download."
+        },
+        {
+          "path": "frontend/src/export/pdfReport.ts",
+          "operation": "create",
+          "description": "Implement PDF report generation that includes patient/session fields and embedded images (first N or user-selected) and renders annotations/measurement overlays into exported visuals where feasible."
+        },
+        {
+          "path": "frontend/src/components/ExportPanel.tsx",
+          "operation": "create",
+          "description": "Create an Export UI panel with controls for ZIP download and PDF report generation, including image selection (or first N) and progress/error feedback. Use shadcn-ui components for consistent actions and dialogs. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/ExportReportsPage.tsx",
+          "operation": "modify",
+          "description": "Wire ExportReportsPage to session/patient selection context, load required captures and local annotation metadata, and expose ZIP/PDF export actions via ExportPanel."
+        }
+      ]
+    },
+    {
+      "id": "REQ-11",
+      "summary": "Apply a medical blue/white theme with large touch-friendly controls, clear status indicators, and responsive portrait/landscape layouts.",
+      "acceptanceCriteria": [
+        "UI uses a consistent blue/white medical theme with high contrast and readable typography.",
+        "Primary actions (Connect, Start/Stop, Capture) are large and easy to tap/click.",
+        "Layouts adapt cleanly to wide (landscape) and narrow (portrait) viewports."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/index.css",
+          "operation": "create",
+          "description": "Create global styles and Tailwind layer overrides to enforce blue/white medical palette, accessible typography, large touch targets, and clear status indicator styles (while keeping all UI text in English)."
+        },
+        {
+          "path": "frontend/tailwind.config.js",
+          "operation": "modify",
+          "description": "Adjust Tailwind theme tokens (colors, spacing, radii) to support the requested medical UI palette and consistent sizing for touch-friendly controls."
+        },
+        {
+          "path": "frontend/src/components/AppShell.tsx",
+          "operation": "modify",
+          "description": "Apply responsive layout patterns in the shell (portrait vs landscape navigation behavior) and ensure primary actions remain prominent and easy to tap/click."
+        },
+        {
+          "path": "frontend/src/components/ConnectionStatusPanel.tsx",
+          "operation": "modify",
+          "description": "Ensure status indicators are high-contrast and readable, with responsive wrapping for narrow viewports."
+        },
+        {
+          "path": "frontend/src/components/LiveControlsBar.tsx",
+          "operation": "modify",
+          "description": "Ensure primary actions (Connect/Start/Stop/Capture) are visually prominent, large, and usable on touch devices and in both portrait/landscape layouts."
+        }
+      ]
+    },
+    {
+      "id": "REQ-12",
+      "summary": "Add browser permissions and guidance UX for WebSerial/WebUSB, including fallback to Demo/Simulator Mode and a Requirements section on the Connection screen.",
+      "acceptanceCriteria": [
+        "If a required browser capability is missing or permission is denied, the app shows an actionable message explaining how to proceed.",
+        "Connection screen includes a short “Requirements” section (in English) describing supported browsers and the Demo/Simulator fallback."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/RequirementsHelp.tsx",
+          "operation": "create",
+          "description": "Create a Requirements/help component (English copy) describing supported browsers for WebSerial/WebUSB, permission prompts, and how to use Demo/Simulator Mode."
+        },
+        {
+          "path": "frontend/src/components/PermissionGuidance.tsx",
+          "operation": "create",
+          "description": "Create a guidance component that detects missing browser capabilities and permission-denied states and shows actionable instructions (e.g., retry steps, browser suggestions, or switching to Demo/Simulator Mode)."
+        },
+        {
+          "path": "frontend/src/pages/ConnectionPage.tsx",
+          "operation": "modify",
+          "description": "Add a Requirements section and permission guidance messaging; ensure users can clearly proceed via supported transport selection or Demo/Simulator Mode when hardware APIs are unavailable/denied."
+        }
+      ]
+    }
+  ]
+}
